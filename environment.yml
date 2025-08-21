@@ -1,0 +1,15 @@
+name: morse_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pydub
+  - pysoundfile
+  - tensorflow=2.15.0
+  - librosa
+  - numpy=1.24.4
+  - scikit-learn
+  - scipy=1.11.4
+  - pyaudio
+  - pandas
+prefix: /home/ve2pf/miniforge3/envs/morse_env

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurateur Dataset Morse Avancé</title>
+    
+    <!-- INCLUSION DE TAILWIND CSS POUR LE STYLE -->
+    <!-- Framework CSS moderne qui permet un design rapide et responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* STYLES PERSONNALISÉS POUR L'INTERFACE */
+        /* ========================================= */
+        
+        /* Animation de rotation pour le spinner de chargement */
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #4f46e5;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Effet de dégradé pour les cartes de section */
+        .section-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* Effet de verre translucide moderne */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Style pour l'onglet actif */
+        .tab-active {
+            background: #4f46e5;
+            color: white;
+        }
+        
+        /* Style pour la zone d'aperçu JSON (terminal) */
+        .preview-box {
+            background: #1a1a1a;           /* Fond noir comme un terminal */
+            color: #0f0;                   /* Texte vert comme les anciens terminaux */
+            font-family: 'Courier New', monospace;  /* Police monospace */
+            white-space: pre-wrap;         /* Préserver les espaces et sauts de ligne */
+            overflow-x: auto;              /* Défilement horizontal si nécessaire */
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 400px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 flex flex-col min-h-screen">
+    <!-- STRUCTURE PRINCIPALE : FLEXBOX POUR UN LAYOUT PROPRE -->
+    
+    <!-- EN-TÊTE DE L'APPLICATION -->
+    <!-- ======================== -->
+    <header class="bg-gray-800 p-4 shadow-lg text-center">
+        <h1 class="text-3xl font-bold text-indigo-400">Configurateur de Dataset Morse Avancé</h1>
+        <p class="text-gray-400 mt-1">Générez des configurations JSON pour votre IA de décodage Morse</p>
+    </header>
+
+    <!-- CONTENU PRINCIPAL -->
+    <!-- ================== -->
+    <main class="flex-grow container mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- NAVIGATION PAR ONGLETS -->
+        <!-- ====================== -->
+        <div class="md:col-span-3 flex justify-center mb-6">
+            <button class="tab-button px-6 py-3 rounded-l-lg font-semibold text-lg transition-all duration-300 tab-active" 
+                    data-tab="config-tab">
+                Configuration
+            </button>
+            <button class="tab-button px-6 py-3 rounded-r-lg font-semibold text-lg transition-all duration-300" 
+                    data-tab="preview-tab">
+                Aperçu JSON
+            </button>
+        </div>
+
+        <!-- ONGLET CONFIGURATION -->
+        <!-- ==================== -->
+        <div id="config-tab" class="md:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- SECTION 1: OPTIONS DE GÉNÉRATION -->
+            <!-- ================================= -->
+            <div class="section-card p-6 rounded-lg shadow-xl glass-effect flex flex-col justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 text-center">Options de Génération</h2>
+                    
+                    <!-- CONTRÔLE: NOMBRE DE FICHIERS TEXTE -->
+                    <!-- Détermine combien de textes différents seront générés -->
+                    <div class="mb-4">
+                        <label for="numTextFiles" class="block text-lg font-medium mb-2">
+                            Nombre de fichiers texte (<span id="numTextFilesValue">10</span>)
+                        </label>
+                        <input type="range" id="numTextFiles" name="numTextFiles" 
+                               min="1" max="1000" value="10" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                    
+                    <!-- CONTRÔLE: TAILLE DES GROUPES -->
+                    <!-- Multiplicateur pour la longueur des textes générés -->
+                    <div class="mb-4">
+                        <label for="groupSize" class="block text-lg font-medium mb-2">
+                            Taille du Groupe de Textes (<span id="groupSizeValue">1</span>)
+                        </label>
+                        <input type="range" id="groupSize" name="groupSize" 
+                               min="1" max="10" value="1" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                    
+                    <!-- CONTRÔLE: NOMBRE DE GROUPES -->
+                    <!-- Nombre de variantes audio pour chaque texte -->
+                    <div class="mb-4">
+                        <label for="numGroups" class="block text-lg font-medium mb-2">
+                            Nombre de Groupes (<span id="numGroupsValue">1</span>)
+                        </label>
+                        <input type="range" id="numGroups" name="numGroups" 
+                               min="1" max="50" value="1" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                    
+                    <!-- SÉLECTION: TYPES DE CARACTÈRES -->
+                    <!-- Définit quels caractères inclure dans les textes générés -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Types de Caractères</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="charType" value="alphabet" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">Alphabets (A-Z)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="charType" value="numbers" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">Chiffres (0-9)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="charType" value="punctuation" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">Ponctuation</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="charType" value="accents" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">Accents (À, É, etc.)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="charType" value="prosigns" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">Prosigns (AR, SK, etc.)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- SÉLECTION: FRÉQUENCE DES CARACTÈRES -->
+                    <!-- Contrôle la distribution statistique des lettres -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Fréquence des Caractères (Alphabet)</label>
+                        <select id="alphabetFrequency" 
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900">
+                            <option value="natural">Naturelle (Français/Anglais)</option>
+                            <option value="uniform">Uniforme (Toutes égales)</option>
+                            <option value="custom">Personnalisée (JSON)</option>
+                        </select>
+                        <!-- ZONE DE TEXTE: POIDS PERSONNALISÉS -->
+                        <!-- Apparaît seulement si "Personnalisée" est sélectionnée -->
+                        <textarea id="customWeights" rows="3" 
+                                  class="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900" 
+                                  placeholder='{"A": 0.1, "B": 0.05}' style="display: none;">
+                        </textarea>
+                    </div>
+                </div>
+                
+                <!-- SOUS-SECTION: SÉQUENCES SPÉCIALES -->
+                <!-- Permet d'ajouter des codes Q et abréviations radioamateur -->
+                <div class="mt-6 border-t pt-4 border-gray-700">
+                    <h3 class="text-xl font-bold mb-3">Séquences Spéciales</h3>
+                    <label class="flex items-center mb-2">
+                        <input type="checkbox" id="specialSequencesEnabled" 
+                               class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                        <span class="ml-2">Activer les séquences spéciales</span>
+                    </label>
+                    <div id="specialSequencesOptions">
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" id="qCodesEnabled" 
+                                   class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                            <span class="ml-2">Codes Q (QSO, QRT, etc.)</span>
+                        </label>
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" id="abbreviationsEnabled" 
+                                   class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                            <span class="ml-2">Abréviations communes (73, 88, etc.)</span>
+                        </label>
+                        <div class="mb-4">
+                            <label for="specialSequenceProbability" class="block text-lg font-medium mb-2">
+                                Probabilité (<span id="specialSequenceProbabilityValue">0.15</span>)
+                            </label>
+                            <input type="range" id="specialSequenceProbability" 
+                                   min="0.0" max="1.0" step="0.01" value="0.15" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: OPTIONS AUDIO -->
+            <!-- ========================= -->
+            <div class="section-card p-6 rounded-lg shadow-xl glass-effect flex flex-col justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 text-center">Options Audio</h2>
+                    
+                    <!-- SÉLECTION: VITESSES WPM (MOTS PAR MINUTE) -->
+                    <!-- Plus la vitesse est élevée, plus le Morse est rapide -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Vitesse (Mots par Minute)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="wpm" value="5" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">5 WPM (Débutant)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="wpm" value="10" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">10 WPM</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="wpm" value="15" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">15 WPM</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="wpm" value="20" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">20 WPM (Avancé)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="wpm" value="25" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">25 WPM</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="wpm" value="30" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">30 WPM (Expert)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- SÉLECTION: TYPES DE BRUIT DE FOND -->
+                    <!-- Simule les conditions réelles d'écoute radio -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Types de Bruit de Fond</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="noiseType" value="none" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">Aucun (Idéal)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="noiseType" value="white" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">Bruit blanc</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="noiseType" value="pink" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">Bruit rose (Naturel)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="noiseType" value="brownian" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600">
+                                <span class="ml-2">Bruit brownien</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- SÉLECTION: NIVEAUX SNR (SIGNAL-TO-NOISE RATIO) -->
+                    <!-- Plus le dB est élevé, moins il y a de bruit -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Niveaux SNR (Signal/Bruit en dB)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="snr" value="-10" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">-10 dB (Difficile)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="snr" value="-5" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">-5 dB</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="snr" value="0" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">0 dB</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="snr" value="5" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">5 dB</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="snr" value="10" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">10 dB</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="snr" value="20" 
+                                       class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                <span class="ml-2">20 dB (Clair)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- CONTRÔLES: VARIABILITÉ HUMAINE -->
+                    <!-- Simule les imperfections du télégraphe manuel -->
+                    <div class="mb-4">
+                        <label for="humanVarMin" class="block text-lg font-medium mb-2">
+                            Variabilité Humaine Min (%) (<span id="humanVarMinValue">-15</span>)
+                        </label>
+                        <input type="range" id="humanVarMin" min="-50" max="0" value="-15" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                    <div class="mb-4">
+                        <label for="humanVarMax" class="block text-lg font-medium mb-2">
+                            Variabilité Humaine Max (%) (<span id="humanVarMaxValue">15</span>)
+                        </label>
+                        <input type="range" id="humanVarMax" min="0" max="50" value="15" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                    
+                    <!-- SÉLECTION: PARAMÈTRES AUDIO TECHNIQUES -->
+                    <div class="mb-4">
+                        <label for="sampleRate" class="block text-lg font-medium mb-2">Taux d'Échantillonnage</label>
+                        <select id="sampleRate" 
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900">
+                            <option value="8000">8000 Hz (Téléphone)</option>
+                            <option value="16000">16000 Hz (Voix)</option>
+                            <option value="22050">22050 Hz (Réduite)</option>
+                            <option value="44100" selected>44100 Hz (CD Quality)</option>
+                            <option value="48000">48000 Hz (Pro)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="morseToneFreq" class="block text-lg font-medium mb-2">
+                            Fréquence du Ton Morse (Hz) (<span id="morseToneFreqValue">700</span>)
+                        </label>
+                        <input type="range" id="morseToneFreq" min="200" max="1500" value="700" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="maxAmplitude" class="block text-lg font-medium mb-2">
+                            Amplitude Maximale (<span id="maxAmplitudeValue">0.5</span>)
+                        </label>
+                        <input type="range" id="maxAmplitude" min="0.1" max="1.0" step="0.05" value="0.5" 
+                               class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: OPTIONS AVANCÉES ET DICTIONNAIRES -->
+            <!-- ============================================== -->
+            <div class="section-card p-6 rounded-lg shadow-xl glass-effect flex flex-col justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 text-center">Options Avancées Audio</h2>
+                    
+                    <!-- EFFET: DÉRIVE DE FRÉQUENCE -->
+                    <!-- Simule l'instabilité des anciens oscillateurs radio -->
+                    <div class="mb-4 border-b pb-4 border-gray-700">
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" id="frequencyDriftEnabled" 
+                                   class="form-checkbox h-5 w-5 text-indigo-600">
+                            <span class="ml-2 font-semibold">Dérive de Fréquence</span>
+                        </label>
+                        <div id="frequencyDriftOptions" class="ml-6" style="display: none;">
+                            <label for="maxVariationHz" class="block text-lg font-medium mb-2">
+                                Variation Max (Hz) (<span id="maxVariationHzValue">25</span>)
+                            </label>
+                            <input type="range" id="maxVariationHz" min="0" max="100" value="25" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                        </div>
+                    </div>
+
+                    <!-- EFFET: FADING (ÉVANOUISSEMENT) -->
+                    <!-- Simule les variations d'intensité dues à la propagation radio -->
+                    <div class="mb-4 border-b pb-4 border-gray-700">
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" id="fadingEnabled" 
+                                   class="form-checkbox h-5 w-5 text-indigo-600">
+                            <span class="ml-2 font-semibold">Fading (Évanouissement)</span>
+                        </label>
+                        <div id="fadingOptions" class="ml-6" style="display: none;">
+                            <label for="maxDepthDb" class="block text-lg font-medium mb-2">
+                                Profondeur Max (dB) (<span id="maxDepthDbValue">6</span>)
+                            </label>
+                            <input type="range" id="maxDepthDb" min="0" max="20" value="6" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                            <label for="speedVariation" class="block text-lg font-medium mb-2">
+                                Vitesse de Variation (<span id="speedVariationValue">0.3</span>)
+                            </label>
+                            <input type="range" id="speedVariation" min="0.1" max="1.0" step="0.1" value="0.3" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                        </div>
+                    </div>
+
+                    <!-- EFFET: DISTORSION -->
+                    <!-- Simule la dégradation du signal par les équipements -->
+                    <div class="mb-4 border-b pb-4 border-gray-700">
+                        <label class="block text-lg font-semibold mb-2">Distorsion</label>
+                        <div class="ml-6">
+                            <div class="mb-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="distortion" value="none" 
+                                           class="form-checkbox h-5 w-5 text-indigo-600" checked>
+                                    <span class="ml-2">Aucune (Signal pur)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="distortion" value="soft" 
+                                           class="form-checkbox h-5 w-5 text-indigo-600">
+                                    <span class="ml-2">Douce (Tubes électroniques)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="distortion" value="hard" 
+                                           class="form-checkbox h-5 w-5 text-indigo-600">
+                                    <span class="ml-2">Dure (Saturation numérique)</span>
+                                </label>
+                            </div>
+                            <label for="distortionProbability" class="block text-lg font-medium mb-2">
+                                Probabilité (<span id="distortionProbabilityValue">0.0</span>)
+                            </label>
+                            <input type="range" id="distortionProbability" min="0.0" max="1.0" step="0.01" value="0.0" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                        </div>
+                    </div>
+
+                    <!-- EFFET: BRUIT IMPULSIONNEL -->
+                    <!-- Simule les parasites et interférences ponctuelles -->
+                    <div class="mb-4 border-b pb-4 border-gray-700">
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" id="impulseNoiseEnabled" 
+                                   class="form-checkbox h-5 w-5 text-indigo-600">
+                            <span class="ml-2 font-semibold">Bruit Impulsionnel (Parasites)</span>
+                        </label>
+                        <div id="impulseNoiseOptions" class="ml-6" style="display: none;">
+                            <label for="impulseProbability" class="block text-lg font-medium mb-2">
+                                Probabilité (<span id="impulseProbabilityValue">0.01</span>)
+                            </label>
+                            <input type="range" id="impulseProbability" min="0.0" max="0.1" step="0.001" value="0.01" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                            <label for="impulseMagnitude" class="block text-lg font-medium mb-2">
+                                Magnitude (<span id="impulseMagnitudeValue">0.1</span>)
+                            </label>
+                            <input type="range" id="impulseMagnitude" min="0.01" max="1.0" step="0.01" value="0.1" 
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-blue-200">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: DICTIONNAIRES MORSE -->
+                <!-- ============================= -->
+                <div class="mt-6 border-t pt-4 border-gray-700">
+                    <h2 class="text-2xl font-bold mb-4 text-center">Dictionnaires Morse</h2>
+                    
+                    <!-- DICTIONNAIRE PRINCIPAL (ALPHABET, CHIFFRES, PONCTUATION) -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Dictionnaire Principal</label>
+                        <textarea id="morseMainDict" rows="5" 
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900" 
+                                  placeholder='{"A": ".-", "B": "-..."}'>
+                        </textarea>
+                        <p class="text-sm text-gray-400 mt-1">Exemple: {"A": ".-", "B": "-...", "1": ".----"}</p>
+                    </div>
+                    
+                    <!-- DICTIONNAIRE DES CARACTÈRES ACCENTUÉS -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Dictionnaire Accents (optionnel)</label>
+                        <textarea id="morseAccentedDict" rows="3" 
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900" 
+                                  placeholder='{"À": ".-.-"}'>
+                        </textarea>
+                        <p class="text-sm text-gray-400 mt-1">Exemple: {"À": ".-.-", "É": "..-.."}</p>
+                    </div>
+                    
+                    <!-- DICTIONNAIRE DES PROSIGNS (SIGNAUX DE PROCÉDURE) -->
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium mb-2">Dictionnaire Prosigns (optionnel)</label>
+                        <textarea id="morseProsignDict" rows="3" 
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900" 
+                                  placeholder='{"AR": ".-.-."'}'>
+                        </textarea>
+                        <p class="text-sm text-gray-400 mt-1">Exemple: {"AR": ".-.-.", "SK": "...-.-"}</p>
+                    </div>
+                    
+                    <!-- BOUTON: CHARGER LES VALEURS PAR DÉFAUT -->
+                    <button id="loadDefaultsBtn" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 w-full">
+                        Charger Dictionnaires par Défaut
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET APERÇU JSON -->
+        <!-- ================== -->
+        <div id="preview-tab" class="md:col-span-3 hidden">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl glass-effect">
+                <h2 class="text-2xl font-bold mb-4 text-center text-indigo-400">Aperçu de la Configuration JSON</h2>
+                <!-- ZONE D'AFFICHAGE DU JSON GÉNÉRÉ -->
+                <!-- Style "terminal" pour un aspect technique -->
+                <div class="preview-box">
+                    <pre id="json-preview" class="text-sm"></pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PIED DE PAGE AVEC BOUTON DE TÉLÉCHARGEMENT -->
+    <!-- ============================================ -->
+    <footer class="bg-gray-800 p-4 shadow-lg text-center mt-6">
+        <button id="downloadConfigBtn" 
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center mx-auto">
+            <!-- SPINNER DE CHARGEMENT (CACHÉ PAR DÉFAUT) -->
+            <span id="spinner" class="loading-spinner hidden mr-2"></span>
+            <span id="btnText">Télécharger Configuration JSON</span>
+        </button>
+    </footer>
+
+    <!-- JAVASCRIPT: LOGIQUE DE L'APPLICATION -->
+    <!-- ===================================== -->
+    <script>
+        // =================================================================
+        // MISE À JOUR DYNAMIQUE DES VALEURS DES SLIDERS
+        // =================================================================
+        // Pour chaque slider, afficher la valeur actuelle à côté du libellé
+        
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            const outputId = input.id + 'Value';
+            const outputElement = document.getElementById(outputId);
+            if (outputElement) {
+                // Mise à jour initiale
+                outputElement.textContent = input.value;
+                // Mise à jour lors du changement
+                input.addEventListener('input', () => {
+                    outputElement.textContent = input.value;
+                });
+            }
+        });
+
+        // =================================================================
+        // GESTION DES OPTIONS AVANCÉES (AFFICHAGE CONDITIONNEL)
+        // =================================================================
+        // Afficher/masquer les sous-options selon les cases cochées
+        
+        document.getElementById('frequencyDriftEnabled').addEventListener('change', function() {
+            document.getElementById('frequencyDriftOptions').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+        
+        document.getElementById('fadingEnabled').addEventListener('change', function() {
+            document.getElementById('fadingOptions').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+        
+        document.getElementById('impulseNoiseEnabled').addEventListener('change', function() {
+            document.getElementById('impulseNoiseOptions').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        // Afficher/masquer la zone de poids personnalisés
+        document.getElementById('alphabetFrequency').addEventListener('change', function() {
+            document.getElementById('customWeights').style.display = 
+                this.value === 'custom' ? 'block' : 'none';
+        });
+
+        // Afficher/masquer les options de séquences spéciales
+        document.getElementById('specialSequencesEnabled').addEventListener('change', function() {
+            document.getElementById('specialSequencesOptions').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        // =================================================================
+        // GESTION DES ONGLETS (CONFIGURATION / APERÇU)
+        // =================================================================
+        
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Retirer la classe active de tous les boutons
+                document.querySelectorAll('.tab-button').forEach(btn => 
+                    btn.classList.remove('tab-active'));
+                // L'ajouter au bouton cliqué
+                button.classList.add('tab-active');
+
+                // Cacher tous les onglets
+                document.getElementById('config-tab').classList.add('hidden');
+                document.getElementById('preview-tab').classList.add('hidden');
+
+                // Afficher l'onglet sélectionné
+                const targetTab = button.dataset.tab;
+                document.getElementById(targetTab).classList.remove('hidden');
+
+                // Mettre à jour l'aperçu si on bascule sur cet onglet
+                if (targetTab === 'preview-tab') {
+                    updatePreview();
+                }
+            });
+        });
+
+        // =================================================================
+        // DICTIONNAIRES MORSE PAR DÉFAUT
+        // =================================================================
+        // Valeurs standard utilisées internationalement
+        
+        const defaultMainDict = {
+            // ALPHABET
+            "A": ".-", "B": "-...", "C": "-.-.", "D": "-..", "E": ".",
+            "F": "..-.", "G": "--.", "H": "....", "I": "..", "J": ".---",
+            "K": "-.-", "L": ".-..", "M": "--", "N": "-.", "O": "---",
+            "P": ".--.", "Q": "--.-", "R": ".-.", "S": "...", "T": "-",
+            "U": "..-", "V": "...-", "W": ".--", "X": "-..-", "Y": "-.--",
+            "Z": "--..",
+            
+            // CHIFFRES
+            "0": "-----", "1": ".----", "2": "..---", "3": "...--", "4": "....-",
+            "5": ".....", "6": "-....", "7": "--...", "8": "---..", "9": "----.",
+            
+            // PONCTUATION
+            ".": ".-.-.-", ",": "--..--", "?": "..--..", "'": ".----.", "!": "-.-.--",
+            "/": "-..-.", "(": "-.--.", ")": "-.--.-", "&": ".-...", ":": "---...",
+            ";": "-.-.-.", "=": "-...-", "+": ".-.-.", "-": "-....-", "_": "..--.-",
+            "\"": ".-..-.", "$": "...-..-", "@": ".--.-."
+        };
+
+        const defaultAccentedDict = {
+            // CARACTÈRES ACCENTUÉS FRANÇAIS ET EUROPÉENS
+            "À": ".-.-", "Á": ".-.-", "Ä": ".-.-", "Å": ".--.-", "Ą": ".-.-", "Æ": ".-.-",
+            "Ç": "-.-..", "Ć": "-.-..", "Ĉ": "-.-..",
+            "È": "..-..", "É": "..-..", "Ę": "..-..",
+            "Ñ": "--.--",
+            "Ö": "---.", "Ó": "---.", "Ô": "---.", "Ø": "---.",
+            "Ü": "..--", "Ŭ": "..--", "Û": "..--", "Ù": "..--",
+            "ß": "...--..",
+            "Ś": ".-..-",
+            "Š": "...-.-.", "Ż": "--..-.", "Ź": "--..-",
+            "Ë": "..-.."
+        };
+
+        const defaultProsignDict = {
+            // SIGNAUX DE PROCÉDURE RADIOAMATEUR STANDARDS
+            "AR": ".-.-.",   // Fin de message
+            "AS": ".-...",   // Attendre
+            "BK": "-...-.-", // Break
+            "CL": "-.-..-..", // Fermeture de station
+            "CT": "-.-.-",   // Attention
+            "DE": "-..",     // De (indicatif)
+            "DO": "-..---",  // Shift to wabun code
+            "K": "-.-",      // Invitation à transmettre
+            "KN": "-.--.",   // Invitation au correspondant seulement
+            "OSK": "---...-.-", // Message terminé, fermeture
+            "PSE": ".--.",   // S'il vous plaît
+            "R": ".-.",      // Reçu/Roger
+            "RQ": ".-.-",    // Demande de répétition
+            "SK": "...-.-",  // Fin de contact
+            "SOS": "...---...", // Détresse internationale
+            "VE": "...-.",   // Compris/Understood
+            "WA": ".--",     // Word after
+            "WB": ".--.-",   // Word before
+            "WK": ".--.-",   // Bien reçu
+            "WL": ".---..",  // Bien, or will comply
+            "X": "-..-",     // Annulation du dernier mot
+            "XMT": "-..-",   // Nous transmettons maintenant
+            "YE": "-.--.",   // Message pour vous
+            "Z": "--..",     // Repos/pause
+            "73": "--..-..", // Meilleures salutations
+            "88": "---..---.." // Amour et baisers
+        };
+
+        // =================================================================
+        // FONCTION: CHARGER LES DICTIONNAIRES PAR DÉFAUT
+        // =================================================================
+        
+        function loadDefaultDictionaries() {
+            document.getElementById('morseMainDict').value = 
+                JSON.stringify(defaultMainDict, null, 2);
+            document.getElementById('morseAccentedDict').value = 
+                JSON.stringify(defaultAccentedDict, null, 2);
+            document.getElementById('morseProsignDict').value = 
+                JSON.stringify(defaultProsignDict, null, 2);
+            updatePreview(); // Mettre à jour l'aperçu
+        }
+
+        // Associer l'événement au bouton
+        document.getElementById('loadDefaultsBtn').addEventListener('click', loadDefaultDictionaries);
+
+        // Charger les dictionnaires par défaut au démarrage
+        loadDefaultDictionaries();
+
+        // =================================================================
+        // FONCTION: ANALYSE SÉCURISÉE DU JSON
+        // =================================================================
+        // Parse le JSON en gérant les erreurs pour éviter les crashes
+        
+        function parseJsonInput(id) {
+            try {
+                const value = document.getElementById(id).value.trim();
+                return value ? JSON.parse(value) : {};
+            } catch (e) {
+                console.error(`JSON invalide dans ${id}:`, e);
+                alert(`Erreur de syntaxe JSON dans le champ "${id}". Veuillez corriger.`);
+                return null;
+            }
+        }
+
+        // =================================================================
+        // FONCTION: GÉNÉRATION DE LA CONFIGURATION COMPLÈTE
+        // =================================================================
+        // Collecte toutes les valeurs de l'interface et crée l'objet JSON final
+        
+        function generateConfig() {
+            // TRAITEMENT DES DICTIONNAIRES MORSE
+            const morseDictionaries = {
+                "MORSE_CODE_DICT": parseJsonInput('morseMainDict'),
+                "MORSE_ACCENTED_CHARS_DICT": parseJsonInput('morseAccentedDict'),
+                "PROSIGN_DICT": parseJsonInput('morseProsignDict')
+            };
+
+            // Vérifier les erreurs JSON
+            if (Object.values(morseDictionaries).some(dict => dict === null)) {
+                return null; // Arrêter si erreur de parsing
+            }
+
+            // COLLECTE DES TYPES DE CARACTÈRES SÉLECTIONNÉS
+            let selectedCharTypes = Array.from(document.querySelectorAll('input[name="charType"]:checked'))
+                .map(el => el.value);
+            if (selectedCharTypes.length === 0) {
+                selectedCharTypes = ["alphabet"]; // Par défaut
+            }
+
+            // TRAITEMENT DES FRÉQUENCES PERSONNALISÉES
+            const alphabetFrequency = document.getElementById('alphabetFrequency').value;
+            let customWeights = {};
+            if (alphabetFrequency === 'custom') {
+                customWeights = parseJsonInput('customWeights');
+                if (customWeights === null) return null;
+            }
+
+            // TRAITEMENT DES TYPES DE DISTORSION
+            let selectedDistortionTypes = Array.from(document.querySelectorAll('input[name="distortion"]:checked'))
+                .map(el => el.value);
+                
+            // Logique de gestion du type "none" avec d'autres types
+            if (selectedDistortionTypes.length === 0) {
+                selectedDistortionTypes = ["none"];
+            } else if (selectedDistortionTypes.length > 1 && selectedDistortionTypes.includes("none")) {
+                // Si "none" est sélectionné avec d'autres, retirer "none"
+                selectedDistortionTypes = selectedDistortionTypes.filter(type => type !== "none");
+                if (selectedDistortionTypes.length === 0) {
+                    selectedDistortionTypes = ["none"];
+                }
+            }
+
+            // CONSTRUCTION DE L'OBJET CONFIGURATION FINAL
+            return {
+                "generationOptions": {
+                    "numTextFiles": parseInt(document.getElementById('numTextFiles').value),
+                    "groupSize": parseInt(document.getElementById('groupSize').value),
+                    "numGroups": parseInt(document.getElementById('numGroups').value),
+                    "selectedCharTypes": selectedCharTypes,
+                    "characterFrequency": {
+                        "alphabet": alphabetFrequency,
+                        "numbers": document.querySelector('input[name="charType"][value="numbers"]').checked ? "uniform" : "none",
+                        "customWeights": customWeights
+                    },
+                    "specialSequences": {
+                        "enabled": document.getElementById('specialSequencesEnabled').checked,
+                        "qCodes": document.getElementById('qCodesEnabled').checked,
+                        "abbreviations": document.getElementById('abbreviationsEnabled').checked,
+                        "probability": parseFloat(document.getElementById('specialSequenceProbability').value)
+                    }
+                },
+                "audioOptions": {
+                    "selectedWPMs": Array.from(document.querySelectorAll('input[name="wpm"]:checked'))
+                        .map(el => parseInt(el.value)),
+                    "selectedNoiseTypes": Array.from(document.querySelectorAll('input[name="noiseType"]:checked'))
+                        .map(el => el.value),
+                    "snrLevels": Array.from(document.querySelectorAll('input[name="snr"]:checked'))
+                        .map(el => parseInt(el.value)),
+                    "humanVarMin": parseFloat(document.getElementById('humanVarMin').value),
+                    "humanVarMax": parseFloat(document.getElementById('humanVarMax').value),
+                    "sampleRate": parseInt(document.getElementById('sampleRate').value),
+                    "morseToneFreq": parseInt(document.getElementById('morseToneFreq').value),
+                    "maxAmplitude": parseFloat(document.getElementById('maxAmplitude').value),
+                    "advanced": {
+                        "frequencyDrift": {
+                            "enabled": document.getElementById('frequencyDriftEnabled').checked,
+                            "maxVariationHz": parseFloat(document.getElementById('maxVariationHz').value)
+                        },
+                        "fading": {
+                            "enabled": document.getElementById('fadingEnabled').checked,
+                            "maxDepthDb": parseFloat(document.getElementById('maxDepthDb').value),
+                            "speedVariation": parseFloat(document.getElementById('speedVariation').value)
+                        },
+                        "distortion": {
+                            "type": selectedDistortionTypes,
+                            "probability": parseFloat(document.getElementById('distortionProbability').value)
+                        },
+                        "impulseNoise": {
+                            "enabled": document.getElementById('impulseNoiseEnabled').checked,
+                            "probability": parseFloat(document.getElementById('impulseProbability').value),
+                            "magnitude": parseFloat(document.getElementById('impulseMagnitude').value)
+                        }
+                    }
+                },
+                "outputOptions": {
+                    "outputDir": "mon_dataset",
+                    "audioFormat": "wav"
+                },
+                "morseDictionaries": morseDictionaries
+            };
+        }
+
+        // =================================================================
+        // FONCTION: MISE À JOUR DE L'APERÇU JSON
+        // =================================================================
+        
+        function updatePreview() {
+            const config = generateConfig();
+            if (config) {
+                document.getElementById('json-preview').textContent = 
+                    JSON.stringify(config, null, 2);
+            } else {
+                document.getElementById('json-preview').textContent = 
+                    "Erreur de configuration JSON. Veuillez vérifier vos entrées.";
+            }
+        }
+
+        // =================================================================
+        // GESTION DU TÉLÉCHARGEMENT
+        // =================================================================
+        
+        document.getElementById('downloadConfigBtn').addEventListener('click', () => {
+            const config = generateConfig();
+            if (!config) {
+                return; // Erreur JSON déjà signalée
+            }
+
+            // Créer le fichier JSON
+            const jsonString = JSON.stringify(config, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            // Références aux éléments UI
+            const btn = document.getElementById('downloadConfigBtn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+
+            // AFFICHAGE DE L'ÉTAT DE CHARGEMENT
+            spinner.classList.remove('hidden');
+            btnText.textContent = "Génération...";
+            btn.disabled = true;
+
+            // Délai simulé pour l'expérience utilisateur
+            setTimeout(() => {
+                // TÉLÉCHARGEMENT AUTOMATIQUE
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Morse_gen_config.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // RÉINITIALISATION DE L'INTERFACE
+                spinner.classList.add('hidden');
+                btnText.textContent = "Télécharger Configuration JSON";
+                btn.disabled = false;
+                
+                // FEEDBACK VISUEL DE SUCCÈS
+                btnText.textContent = "✓ Téléchargé !";
+                btn.classList.add('bg-green-600');
+                setTimeout(() => {
+                    btnText.textContent = "Télécharger Configuration JSON";
+                    btn.classList.remove('bg-green-600');
+                }, 2000);
+            }, 800);
+        });
+
+        // =================================================================
+        // MISE À JOUR AUTOMATIQUE DE L'APERÇU
+        // =================================================================
+        // L'aperçu se met à jour automatiquement lors des changements
+        
+        document.addEventListener('input', () => {
+            if (!document.getElementById('preview-tab').classList.contains('hidden')) {
+                updatePreview();
+            }
+        });
+
+        document.addEventListener('change', () => {
+            if (!document.getElementById('preview-tab').classList.contains('hidden')) {
+                updatePreview();
+            }
+        });
+
+        // INITIALISATION: Aperçu au chargement
+        updatePreview();
+    </script>
+</body>
+</html>
+
+<!-- 
+=============================================================================
+DOCUMENTATION POUR LES UTILISATEURS
+=============================================================================
+
+COMMENT UTILISER CETTE INTERFACE:
+=================================
+
+1. CONFIGURATION BÁSIQUE:
+   - Ajustez le nombre de fichiers selon vos besoins
+   - Sélectionnez les types de caractères à inclure
+   - Choisissez les vitesses WPM appropriées
+
+2. CONDITIONS AUDIO:
+   - Commencez sans bruit pour tester
+   - Ajoutez progressivement du bruit pour la robustesse
+   - Les effets avancés simulent des conditions réalistes
+
+3. APERÇU ET TÉLÉCHARGEMENT:
+   - Basculez sur l'onglet "Aperçu JSON" pour voir la configuration
+   - Téléchargez le fichier pour l'utiliser avec le générateur Python
+
+4. CONSEILS:
+   - Pour débuter: 50-100 fichiers, alphabet + chiffres, 5-10 WPM
+   - Pour l'expérimentation: ajoutez ponctuation, plusieurs vitesses
+   - Pour la production: dataset complexe avec tous les effets
+
+DÉPANNAGE:
+==========
+- Erreur JSON: Vérifiez la syntaxe des dictionnaires personnalisés
+- Téléchargement bloqué: Autorisez les pop-ups pour ce site
+- Interface figée: Rechargez la page et recommencez
+
+Cette interface génère des configurations compatibles avec
+morse_generator_incremental.py pour créer vos datasets d'entraînement.
+-->
