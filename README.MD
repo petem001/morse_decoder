@@ -1,8 +1,8 @@
-# Guide d'Utilisation Complet - Système de Reconnaissance Vocale Morse
+# Guide d'Utilisation Complet - Système de Reconnaissance CODE Morse
 
 ## Vue d'ensemble du projet
 
-Ce projet vous permet de créer un système d'intelligence artificielle capable de reconnaître et transcrire automatiquement le code Morse parlé. Le processus complet se déroule en 4 étapes principales :
+Ce projet vous permet de créer un système d'intelligence artificielle capable de reconnaître et transcrire automatiquement le code Morse. Le processus complet se déroule en 4 étapes principales :
 
 1. **Configuration** : Définir les paramètres de génération
 2. **Génération** : Créer un dataset d'audio Morse synthétique  
